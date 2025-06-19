@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { Play, RotateCcw, Loader } from 'lucide-react';
+import { Play, RotateCcw, Loader, Award, CheckCircle } from 'lucide-react';
 import pythonExecutor from './pythonExecutor';
+import assessmentEngine from './AssessmentEngine';
 
 const PlaygroundContainer = styled.div`
   background: ${props => props.gradient || 'linear-gradient(135deg, #3776ab, #ffd43b)'};
@@ -235,11 +236,13 @@ const PrerequisitesSection = styled.div`
   color: rgba(255,255,255,0.7);
 `;
 
-const PythonPlayground = ({ element }) => {
+const PythonPlayground = ({ element, studentId = 'demo-student', onComplete }) => {
   const [code, setCode] = useState(element.content.code || '');
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [assessmentResult, setAssessmentResult] = useState(null);
+  const [showAssessment, setShowAssessment] = useState(false);
   const textareaRef = useRef(null);
 
   // Initialize Python executor on mount
@@ -249,6 +252,13 @@ const PythonPlayground = ({ element }) => {
       try {
         await pythonExecutor.initialize();
         setOutput('🐍 Python is ready! Click "Run Code" to execute your program.');
+        
+        // Initialize student in assessment engine
+        assessmentEngine.initializeStudent(
+          studentId, 
+          element.content.ageGroup || '10-11', 
+          element.content.yearLevel || 1
+        );
       } catch (error) {
         setOutput(`❌ Failed to initialize Python: ${error.message}`);
       } finally {
@@ -257,7 +267,7 @@ const PythonPlayground = ({ element }) => {
     };
 
     initPython();
-  }, []);
+  }, [studentId, element.content.ageGroup, element.content.yearLevel]);
 
   const handleRunCode = async () => {
     if (isRunning || isInitializing) return;
@@ -278,17 +288,54 @@ const PythonPlayground = ({ element }) => {
         maxOutputLength: 5000 // Limit output length
       });
 
+      let displayOutput = '';
       if (result.success) {
         const fullOutput = result.output || '';
         const errorOutput = result.error || '';
         
         if (fullOutput || errorOutput) {
-          setOutput(fullOutput + (errorOutput ? `\n${errorOutput}` : ''));
+          displayOutput = fullOutput + (errorOutput ? `\n${errorOutput}` : '');
         } else {
-          setOutput('✅ Code executed successfully! (No output to display)');
+          displayOutput = '✅ Code executed successfully! (No output to display)';
         }
       } else {
-        setOutput(result.error || 'An unknown error occurred.');
+        displayOutput = result.error || 'An unknown error occurred.';
+      }
+
+      setOutput(displayOutput);
+
+      // Run assessment if this is a template with expected output
+      if (element.content.expectedOutput && element.content.template) {
+        const codeData = {
+          id: element.content.template,
+          expectedOutput: element.content.expectedOutput,
+          outputType: element.content.outputType || 'fuzzy',
+          difficulty: element.content.difficulty || 'beginner',
+          yearLevel: element.content.yearLevel,
+          ageGroup: element.content.ageGroup
+        };
+
+        const assessment = assessmentEngine.assessPythonCode(
+          studentId,
+          codeData,
+          code,
+          result
+        );
+
+        setAssessmentResult(assessment);
+        setShowAssessment(true);
+
+        // Show assessment feedback in output
+        if (assessment.passed) {
+          setOutput(prev => prev + `\n\n🎉 ${assessment.feedback[0]?.message || 'Great job!'}`);
+        } else {
+          setOutput(prev => prev + `\n\n🤔 ${assessment.feedback[0]?.message || 'Keep trying!'}`);
+        }
+
+        // Notify parent component
+        if (onComplete) {
+          onComplete(assessment);
+        }
       }
     } catch (error) {
       setOutput(`💥 Unexpected error: ${error.message}`);
@@ -300,6 +347,8 @@ const PythonPlayground = ({ element }) => {
   const handleResetCode = () => {
     setCode(element.content.code || '');
     setOutput('🔄 Code reset to original template.');
+    setAssessmentResult(null);
+    setShowAssessment(false);
   };
 
   const handleKeyDown = (e) => {
@@ -418,6 +467,53 @@ const PythonPlayground = ({ element }) => {
         <PrerequisitesSection>
           📚 Prerequisites: {element.content.prerequisites.join(', ')}
         </PrerequisitesSection>
+      )}
+
+      {/* Assessment Results and Badges */}
+      {showAssessment && assessmentResult && (
+        <div style={{
+          padding: '12px 20px',
+          background: assessmentResult.passed ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {assessmentResult.passed ? (
+              <CheckCircle size={16} color="#4CAF50" />
+            ) : (
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#ff9800', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px' }}>
+                !
+              </div>
+            )}
+            <span style={{ color: 'white', fontSize: '12px', fontWeight: '600' }}>
+              {assessmentResult.passed ? `Perfect! Score: ${assessmentResult.score}%` : `Keep practicing! Score: ${assessmentResult.score}%`}
+            </span>
+          </div>
+          
+          {assessmentResult.badgesEarned && assessmentResult.badgesEarned.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {assessmentResult.badgesEarned.map((badge, index) => (
+                <div key={index} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 6px',
+                  background: '#667eea',
+                  color: 'white',
+                  borderRadius: '8px',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  animation: 'bounceIn 0.6s ease-out'
+                }}>
+                  <Award size={10} />
+                  {badge.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </PlaygroundContainer>
   );

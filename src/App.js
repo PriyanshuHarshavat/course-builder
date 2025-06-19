@@ -3,6 +3,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import { Plus, Eye, Edit3, FileText, HelpCircle, Trash2, Play, ChevronUp, ChevronDown, MessageCircle, Image, Shield, Palette, Type, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Users } from 'lucide-react';
 import PythonPlayground from './PythonPlayground';
 import InstructorDashboard from './InstructorDashboard';
+import InteractiveQuiz from './InteractiveQuiz';
 
 // TrainArama Theme (same as before)
 const TrainAramaTheme = {
@@ -1405,8 +1406,9 @@ const renderBuilderElement = (element, index) => (
           </HeaderContent>
         </Header>
 
-        <MainContent>
-          {mode === 'builder' ? (
+        {mode !== 'instructor' && (
+          <MainContent>
+            {mode === 'builder' ? (
             <>
               <Sidebar>
                 <SectionTitle>
@@ -1588,8 +1590,9 @@ const renderBuilderElement = (element, index) => (
                 )}
               </CanvasContent>
             </Canvas>
-          )}
-        </MainContent>
+            )}
+          </MainContent>
+        )}
 
         {/* Instructor Dashboard */}
         {mode === 'instructor' && <InstructorDashboard />}
@@ -1835,52 +1838,7 @@ case 'text':
         </div>
       );
 case 'quiz':
-      return (
-        <div style={{
-          background: element.content.gradient || 'linear-gradient(135deg, #A8E6CF, #88D8C0)',
-          padding: '30px',
-          color: '#2D3436'
-        }}>
-          <h3 style={{ fontSize: '20px', marginBottom: '15px' }}>
-            {element.content.icon || '❓'} {element.content.question}
-          </h3>
-          <div style={{ textAlign: 'left' }}>
-            {element.content.options.map((option, index) => (
-              <div key={index} style={{ 
-                margin: '8px 0', 
-                padding: '12px', 
-                background: 'rgba(255,255,255,0.3)', 
-                borderRadius: '8px',
-                border: index === element.content.correct ? '2px solid #4CAF50' : '1px solid rgba(255,255,255,0.5)',
-                fontWeight: index === element.content.correct ? 'bold' : 'normal'
-              }}>
-                {index === element.content.correct ? '✅' : '◯'} {option}
-              </div>
-            ))}
-          </div>
-          {element.content.explanation && (
-            <div style={{ 
-              marginTop: '15px', 
-              padding: '12px', 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: '8px',
-              borderLeft: '4px solid #4CAF50'
-            }}>
-              <strong>💡 Explanation:</strong> {element.content.explanation}
-            </div>
-          )}
-          {element.content.template && (
-            <div style={{ 
-              marginTop: '10px', 
-              fontSize: '12px', 
-              opacity: 0.8,
-              fontStyle: 'italic'
-            }}>
-              Template: {element.content.style}
-            </div>
-          )}
-        </div>
-      );
+      return <InteractiveQuiz element={element} studentId="demo-student" />;
     case 'ethics':
       return (
         <div style={{
