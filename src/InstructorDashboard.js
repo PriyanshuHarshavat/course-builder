@@ -334,7 +334,7 @@ const DetailValue = styled.div`
   color: #2D3436;
 `;
 
-// Mock student data for demonstration
+// Mock student data for demonstration - Typical after-school TrainArama class
 const mockStudents = [
   {
     id: 1,
@@ -346,10 +346,13 @@ const mockStudents = [
     timeOnActivity: "8 minutes",
     completedActivities: 3,
     totalActivities: 5,
-    lastAction: "Running code",
-    notes: "Great with basic concepts, needs help with indentation",
+    lastAction: "Running code successfully",
+    notes: "Great with basic concepts, needs help with indentation. Very enthusiastic about AI topics.",
     helpRequested: false,
-    timeInSession: 25
+    timeInSession: 25,
+    badges: ["First Code Run", "AI Explorer"],
+    lastHelpRequest: null,
+    sessionGoal: "Complete Python basics and start variables"
   },
   {
     id: 2,
@@ -361,10 +364,13 @@ const mockStudents = [
     timeOnActivity: "15 minutes",
     completedActivities: 2,
     totalActivities: 5,
-    lastAction: "Requested help",
-    notes: "Advanced logical thinking, ask challenging questions",
+    lastAction: "Requested help - confused about bias",
+    notes: "Advanced logical thinking, ask challenging questions. Tends to overthink scenarios.",
     helpRequested: true,
-    timeInSession: 18
+    timeInSession: 18,
+    badges: ["Deep Thinker"],
+    lastHelpRequest: "2 minutes ago",
+    sessionGoal: "Understand AI ethics and complete quiz"
   },
   {
     id: 3,
@@ -372,14 +378,17 @@ const mockStudents = [
     age: 8,
     status: "completed",
     progress: 100,
-    currentActivity: "Session Complete",
+    currentActivity: "🎉 Session Complete - Exploring bonus content",
     timeOnActivity: "finished",
     completedActivities: 5,
     totalActivities: 5,
-    lastAction: "Completed lesson",
-    notes: "Quick learner, ready for advanced content",
+    lastAction: "Earned 'Speed Learner' badge",
+    notes: "Youngest in class but incredibly quick learner. Ready for Year 2 content next week.",
     helpRequested: false,
-    timeInSession: 45
+    timeInSession: 45,
+    badges: ["Speed Learner", "AI Detective", "Code Master"],
+    lastHelpRequest: null,
+    sessionGoal: "COMPLETED - All objectives achieved!"
   },
   {
     id: 4,
@@ -391,10 +400,13 @@ const mockStudents = [
     timeOnActivity: "22 minutes",
     completedActivities: 1,
     totalActivities: 5,
-    lastAction: "Multiple errors",
-    notes: "Struggles with syntax, encourage experimentation",
+    lastAction: "IndentationError - multiple attempts",
+    notes: "Struggles with syntax, but very persistent. Encourage experimentation over perfection.",
     helpRequested: false,
-    timeInSession: 35
+    timeInSession: 35,
+    badges: ["Persistent Coder"],
+    lastHelpRequest: "12 minutes ago",
+    sessionGoal: "Master basic loops and indentation"
   },
   {
     id: 5,
@@ -402,14 +414,17 @@ const mockStudents = [
     age: 10,
     status: "active",
     progress: 80,
-    currentActivity: "AI Chat Demo - Math Buddy",
+    currentActivity: "AI Chat Demo - Testing Math Questions",
     timeOnActivity: "5 minutes",
     completedActivities: 4,
     totalActivities: 5,
-    lastAction: "Testing AI responses",
-    notes: "Creative problem solver, loves interactive elements",
+    lastAction: "Creating creative AI prompts",
+    notes: "Creative problem solver, loves interactive elements. Often helps other students.",
     helpRequested: false,
-    timeInSession: 40
+    timeInSession: 40,
+    badges: ["Creative Thinker", "Helper Badge"],
+    lastHelpRequest: null,
+    sessionGoal: "Complete AI chat and start final quiz"
   },
   {
     id: 6,
@@ -417,14 +432,71 @@ const mockStudents = [
     age: 13,
     status: "active",
     progress: 55,
-    currentActivity: "Python Variables - AI Names",
+    currentActivity: "Python Variables - Creating AI Character Names",
     timeOnActivity: "12 minutes",
     completedActivities: 2,
     totalActivities: 4,
-    lastAction: "Editing code",
-    notes: "Methodical learner, good debugging skills",
+    lastAction: "Testing different variable types",
+    notes: "Methodical learner, excellent debugging skills. Natural mentor for younger students.",
     helpRequested: false,
-    timeInSession: 30
+    timeInSession: 30,
+    badges: ["Debug Master"],
+    lastHelpRequest: null,
+    sessionGoal: "Master variables and help Emma with indentation"
+  },
+  {
+    id: 7,
+    name: "Lily Chen",
+    age: 9,
+    status: "help",
+    progress: 20,
+    currentActivity: "Title Slide - Understanding AI",
+    timeOnActivity: "18 minutes",
+    completedActivities: 1,
+    totalActivities: 6,
+    lastAction: "Raised hand - confused about AI definition",
+    notes: "New student, first week. Needs extra encouragement and basic computer skills support.",
+    helpRequested: true,
+    timeInSession: 20,
+    badges: ["New Explorer"],
+    lastHelpRequest: "Just now",
+    sessionGoal: "Understand what AI is and complete first activity"
+  },
+  {
+    id: 8,
+    name: "Ryan Murphy",
+    age: 14,
+    status: "active",
+    progress: 90,
+    currentActivity: "Advanced Python - AI Decision Trees",
+    timeOnActivity: "7 minutes",
+    completedActivities: 4,
+    totalActivities: 4,
+    lastAction: "Working on bonus challenges",
+    notes: "Most advanced student. Give him leadership roles and complex challenges.",
+    helpRequested: false,
+    timeInSession: 48,
+    badges: ["Code Master", "Leader", "Advanced Thinker"],
+    lastHelpRequest: null,
+    sessionGoal: "Complete advanced content and mentor younger students"
+  },
+  {
+    id: 9,
+    name: "Zoe Williams",
+    age: 10,
+    status: "stuck",
+    progress: 40,
+    currentActivity: "Quiz - True/False AI Ethics",
+    timeOnActivity: "25 minutes",
+    completedActivities: 2,
+    totalActivities: 5,
+    lastAction: "Stuck on question 3 - keeps changing answer",
+    notes: "Perfectionist tendencies. Encourage to trust first instinct and move forward.",
+    helpRequested: false,
+    timeInSession: 32,
+    badges: ["Thoughtful Student"],
+    lastHelpRequest: "5 minutes ago",
+    sessionGoal: "Complete ethics quiz and gain confidence"
   }
 ];
 
@@ -680,6 +752,42 @@ const InstructorDashboard = () => {
                 <DetailLabel>Last Action</DetailLabel>
                 <DetailValue>{selectedStudent.lastAction}</DetailValue>
               </DetailSection>
+
+              {selectedStudent.sessionGoal && (
+                <DetailSection>
+                  <DetailLabel>Session Goal</DetailLabel>
+                  <DetailValue style={{ fontStyle: selectedStudent.progress === 100 ? 'italic' : 'normal', color: selectedStudent.progress === 100 ? '#4CAF50' : '#2D3436' }}>
+                    {selectedStudent.sessionGoal}
+                  </DetailValue>
+                </DetailSection>
+              )}
+
+              {selectedStudent.badges && selectedStudent.badges.length > 0 && (
+                <DetailSection>
+                  <DetailLabel>Earned Badges</DetailLabel>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                    {selectedStudent.badges.map((badge, index) => (
+                      <span key={index} style={{
+                        background: '#667eea',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        fontWeight: '600'
+                      }}>
+                        🏆 {badge}
+                      </span>
+                    ))}
+                  </div>
+                </DetailSection>
+              )}
+
+              {selectedStudent.lastHelpRequest && (
+                <DetailSection>
+                  <DetailLabel>Last Help Request</DetailLabel>
+                  <DetailValue style={{ color: '#ff6b6b' }}>{selectedStudent.lastHelpRequest}</DetailValue>
+                </DetailSection>
+              )}
 
               <NotesSection>
                 <DetailLabel>Instructor Notes</DetailLabel>
