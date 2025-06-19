@@ -204,12 +204,35 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
   const [results, setResults] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeStarted, setTimeStarted] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setTimeStarted(new Date());
     // Initialize student in assessment engine
-    assessmentEngine.initializeStudent(studentId, element.content.ageGroup || '10-11', element.content.yearLevel || 1);
-  }, [studentId, element.content.ageGroup, element.content.yearLevel]);
+    if (element && element.content) {
+      assessmentEngine.initializeStudent(studentId, element.content.ageGroup || '10-11', element.content.yearLevel || 1);
+    }
+  }, [studentId, element]);
+
+  // Validate element structure after hooks
+  if (!element || !element.content) {
+    return (
+      <div style={{ padding: '20px', background: '#ffebee', borderRadius: '8px', color: '#c62828' }}>
+        <h4>Quiz Error</h4>
+        <p>Invalid quiz data. Please check the quiz configuration.</p>
+      </div>
+    );
+  }
+
+  const content = element.content;
+  if (!content.question || !content.options || !Array.isArray(content.options)) {
+    return (
+      <div style={{ padding: '20px', background: '#ffebee', borderRadius: '8px', color: '#c62828' }}>
+        <h4>Quiz Configuration Error</h4>
+        <p>Missing question or options. Please check the quiz template.</p>
+      </div>
+    );
+  }
 
   const handleAnswerSelect = (questionIndex, answerIndex) => {
     if (showResults) return;
@@ -223,41 +246,46 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
   const handleSubmit = () => {
     if (showResults) return;
 
-    const timeCompleted = new Date();
-    const timeSpent = Math.round((timeCompleted - timeStarted) / 1000); // seconds
+    try {
+      const timeCompleted = new Date();
+      const timeSpent = Math.round((timeCompleted - timeStarted) / 1000); // seconds
 
-    // Prepare quiz data for assessment
-    const quizData = {
-      id: element.content.template || 'custom-quiz',
-      type: element.content.quizType || 'multiple-choice',
-      questions: [
-        {
-          text: element.content.question,
-          options: element.content.options,
-          correctAnswer: element.content.correct,
-          explanation: element.content.explanation,
-          correctFeedback: "Excellent! You understood this concept perfectly! 🎉",
-          incorrectFeedback: "Good try! Let's review this concept together. 🤔"
-        }
-      ],
-      passingScore: 70,
-      ageGroup: element.content.ageGroup || '10-11',
-      difficulty: element.content.difficulty || 'beginner'
-    };
+      // Prepare quiz data for assessment
+      const quizData = {
+        id: content.template || 'custom-quiz',
+        type: content.quizType || 'multiple-choice',
+        questions: [
+          {
+            text: content.question,
+            options: content.options,
+            correctAnswer: content.correct,
+            explanation: content.explanation,
+            correctFeedback: "Excellent! You understood this concept perfectly! 🎉",
+            incorrectFeedback: "Good try! Let's review this concept together. 🤔"
+          }
+        ],
+        passingScore: 70,
+        ageGroup: content.ageGroup || '10-11',
+        difficulty: content.difficulty || 'beginner'
+      };
 
-    // Convert selectedAnswers to array format expected by assessment engine
-    const studentAnswers = [selectedAnswers[0]];
+      // Convert selectedAnswers to array format expected by assessment engine
+      const studentAnswers = [selectedAnswers[0]];
 
-    // Assess the quiz
-    const assessmentResults = assessmentEngine.assessQuiz(studentId, quizData, studentAnswers);
-    assessmentResults.timeSpent = timeSpent;
+      // Assess the quiz
+      const assessmentResults = assessmentEngine.assessQuiz(studentId, quizData, studentAnswers);
+      assessmentResults.timeSpent = timeSpent;
 
-    setResults(assessmentResults);
-    setShowResults(true);
+      setResults(assessmentResults);
+      setShowResults(true);
 
-    // Notify parent component if callback provided
-    if (onComplete) {
-      onComplete(assessmentResults);
+      // Notify parent component if callback provided
+      if (onComplete) {
+        onComplete(assessmentResults);
+      }
+    } catch (err) {
+      console.error('Quiz assessment error:', err);
+      setError('Failed to assess quiz. Please try again.');
     }
   };
 
@@ -271,15 +299,30 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
   const isAnswerSelected = selectedAnswers[currentQuestion] !== undefined;
   const selectedAnswer = selectedAnswers[currentQuestion];
 
+  // Show error if exists
+  if (error) {
+    return (
+      <QuizContainer gradient={content.gradient}>
+        <div style={{ padding: '20px', background: '#ffebee', borderRadius: '8px', color: '#c62828' }}>
+          <h4>Error</h4>
+          <p>{error}</p>
+          <button onClick={() => setError(null)} style={{ padding: '8px 16px', marginTop: '8px' }}>
+            Try Again
+          </button>
+        </div>
+      </QuizContainer>
+    );
+  }
+
   return (
     <QuizContainer 
-      gradient={element.content.gradient}
-      width={element.content.width}
-      height={element.content.height}
+      gradient={content.gradient}
+      width={content.width}
+      height={content.height}
     >
       <QuizHeader>
         <QuizTitle>
-          {element.content.icon || '❓'} Quiz Challenge
+          {content.icon || '❓'} Quiz Challenge
         </QuizTitle>
         <QuizProgress>
           Question 1 of 1
@@ -288,13 +331,13 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
 
       <QuestionContainer>
         <h4 style={{ marginBottom: '16px', fontSize: '16px', lineHeight: '1.4' }}>
-          {element.content.question}
+          {content.question}
         </h4>
 
         <OptionsContainer>
-          {element.content.options.map((option, index) => {
+          {content.options.map((option, index) => {
             const isSelected = selectedAnswer === index;
-            const isCorrect = index === element.content.correct;
+            const isCorrect = index === content.correct;
             
             return (
               <OptionButton
@@ -352,7 +395,7 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
             </FeedbackMessage>
           ))}
 
-          {element.content.explanation && (
+          {content.explanation && (
             <div style={{ 
               marginTop: '12px',
               padding: '12px',
@@ -360,7 +403,7 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
               borderRadius: '6px',
               fontSize: '13px'
             }}>
-              <strong>💡 Explanation:</strong> {element.content.explanation}
+              <strong>💡 Explanation:</strong> {content.explanation}
             </div>
           )}
 
