@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
-import { Plus, Eye, Edit3, FileText, HelpCircle, Trash2, Play, ChevronUp, ChevronDown, MessageCircle, Image, Shield, Palette, Type, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Plus, Eye, Edit3, FileText, HelpCircle, Trash2, Play, ChevronUp, ChevronDown, MessageCircle, Image, Shield, Palette, Type, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Users } from 'lucide-react';
 import PythonPlayground from './PythonPlayground';
+import InstructorDashboard from './InstructorDashboard';
 
 // TrainArama Theme (same as before)
 const TrainAramaTheme = {
@@ -1393,6 +1394,13 @@ const renderBuilderElement = (element, index) => (
                 <Eye size={16} />
                 Preview
               </ModeButton>
+              <ModeButton
+                active={mode === 'instructor'}
+                onClick={() => setMode('instructor')}
+              >
+                <Users size={16} />
+                Instructor
+              </ModeButton>
             </ButtonGroup>
           </HeaderContent>
         </Header>
@@ -1583,13 +1591,18 @@ const renderBuilderElement = (element, index) => (
           )}
         </MainContent>
 
+        {/* Instructor Dashboard */}
+        {mode === 'instructor' && <InstructorDashboard />}
+
         {/* Content Management Button */}
-        <ContentManagerButton
-          onClick={() => setShowContentManager(true)}
-          title="Content Management Dashboard"
-        >
-          📊 Content Manager
-        </ContentManagerButton>
+        {mode !== 'instructor' && (
+          <ContentManagerButton
+            onClick={() => setShowContentManager(true)}
+            title="Content Management Dashboard"
+          >
+            📊 Content Manager
+          </ContentManagerButton>
+        )}
 
         {/* Content Management Modal */}
         {showContentManager && (
