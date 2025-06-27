@@ -17,7 +17,18 @@
       "Bash(sed:*)",
       "Bash(fuser:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(echo $HOME)",
+      "Bash(ls:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)",
+      "WebFetch(domain:calm-water-09ad8bf10.1.azurestaticapps.net)",
+      "WebFetch(domain:github.com)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }
