@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrainArama AI Education Platform - Enterprise Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .document {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .header .version {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            font-size: 1.3rem;
+            margin: 20px 0 10px 0;
+        }
+        
+        .diagram {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .architecture-overview {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .component {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .component h4 {
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .pros, .cons {
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .pros {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .cons {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+        
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .cost-table th,
+        .cost-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .cost-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .cost-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .emoji {
+            font-size: 1.2rem;
+        }
+        
+        .flow-step {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 5px;
+            font-weight: 600;
+        }
+        
+        .assumption {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .assumption h4 {
+            color: #856404;
+            margin-bottom: 5px;
+        }
+        
+        .decision-point {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #ff6b6b;
+        }
+        
+        .print-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <div class="header">
+            <h1>🚀 TrainArama AI Education Platform</h1>
+            <div class="subtitle">Enterprise-Grade Franchise Architecture</div>
+            <div class="version">Version 1.0 | December 2024</div>
+        </div>
+        
+        <div class="content">
+            <!-- Executive Summary -->
+            <div class="section">
+                <h2><span class="emoji">📋</span> Executive Summary</h2>
+                
+                <div class="decision-point">
+                    <h3>🎯 Business Vision</h3>
+                    <p><strong>TrainArama</strong> is an AI-powered educational platform designed for <strong>global franchise operations</strong>. We're building a system that can handle <strong>10,000+ franchise locations</strong> with <strong>millions of students</strong> while maintaining enterprise-grade security and performance.</p>
+                </div>
+                
+                <h3>Key Business Requirements</h3>
+                <div class="component">
+                    <h4>🏢 Franchise Operations</h4>
+                    <ul>
+                        <li><strong>Multi-tenant architecture</strong> - Complete data isolation per franchise</li>
+                        <li><strong>White-label branding</strong> - Each franchise looks unique</li>
+                        <li><strong>Scalable pricing</strong> - Pay based on usage and growth</li>
+                        <li><strong>Global distribution</strong> - Fast access worldwide</li>
+                    </ul>
+                </div>
+                
+                <div class="component">
+                    <h4>📚 Educational Features</h4>
+                    <ul>
+                        <li><strong>Pre-built content library</strong> - Python exercises, quizzes, slides</li>
+                        <li><strong>AI-powered builders</strong> - Generate custom content instantly</li>
+                        <li><strong>Progress tracking</strong> - Real-time learning analytics</li>
+                        <li><strong>Gamification</strong> - Badges, achievements, leaderboards</li>
+                    </ul>
+                </div>
+                
+                <div class="assumption">
+                    <h4>💡 Key Assumption</h4>
+                    <p>Each franchise will have an average of <strong>500-2,000 active users</strong> (students, teachers, parents) with peak usage during school hours. Content will be <strong>read-heavy</strong> (80% reads, 20% writes) with seasonal spikes during exam periods.</p>
+                </div>
+            </div>
+            
+            <!-- High-Level Architecture -->
+            <div class="section print-break">
+                <h2><span class="emoji">🏗️</span> High-Level Architecture Overview</h2>
+                
+                <div class="architecture-overview">
+                    <h3>🌐 Global Azure Infrastructure</h3>
+                    <div class="diagram">
+<pre>
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           🌍 GLOBAL EDGE NETWORK (Azure CDN)                    │
+│                         📍 200+ Edge Locations Worldwide                        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    │                     │                     │
+           ┌─────────▼─────────┐ ┌───────▼───────┐ ┌─────────▼─────────┐
+           │   🇺🇸 East US     │ │ 🇪🇺 West Europe│ │ 🇦🇺 Asia Pacific │
+           │   (Primary)       │ │  (Secondary)   │ │   (Expansion)     │
+           └─────────┬─────────┘ └───────┬───────┘ └─────────┬─────────┘
+                     │                   │                   │
+    ┌────────────────▼────────────────────────────────────────▼────────────────┐
+    │                        💻 FRONTEND LAYER                                 │
+    │                                                                           │
+    │  📱 Static Web Apps          🌐 CDN Distribution    📊 Application       │
+    │  • React Application        • Global Caching       • Real-time          │
+    │  • Multi-environment        • Image Optimization   • Performance        │
+    │  • Auto-scaling             • Bandwidth Reduction  • Error Tracking     │
+    └─────────────────────────────────┬─────────────────────────────────────────┘
+                                      │
+    ┌─────────────────────────────────▼─────────────────────────────────────────┐
+    │                          ⚡ API GATEWAY LAYER                             │
+    │                                                                           │
+    │  🔐 Azure API Management     🚀 Azure Functions     📋 Logic Apps        │
+    │  • Rate Limiting             • Serverless APIs      • Workflow           │
+    │  • Authentication            • Auto-scaling         • Integration        │
+    │  • Request Routing           • Pay-per-execution    • Business Logic     │
+    └─────────────────────────────────┬─────────────────────────────────────────┘
+                                      │
+    ┌─────────────────────────────────▼─────────────────────────────────────────┐
+    │                           💾 DATA LAYER                                   │
+    │                                                                           │
+    │  🌐 Cosmos DB               📁 Blob Storage          🔐 Key Vault         │
+    │  • Multi-master             • Unlimited Scale       • Secrets           │
+    │  • Global Distribution      • Hot/Cool/Archive      • Certificates      │
+    │  • Auto-partition           • CDN Integration       • Encryption Keys   │
+    │  • 99.999% Uptime          • Multi-region Copy     • Access Control    │
+    └───────────────────────────────────────────────────────────────────────────┘
+</pre>
+                    </div>
+                </div>
+                
+                <h3>🎯 Why This Architecture?</h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Perfect for Franchises</h4>
+                        <ul>
+                            <li><strong>Global Scale</strong> - Handles worldwide operations</li>
+                            <li><strong>Data Isolation</strong> - Each franchise is completely separate</li>
+                            <li><strong>Cost Efficient</strong> - Pay only for what you use</li>
+                            <li><strong>Enterprise Security</strong> - SOC 2, GDPR, COPPA compliant</li>
+                            <li><strong>99.99% Uptime</strong> - Reliable for business operations</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>⚠️ Considerations</h4>
+                        <ul>
+                            <li><strong>Complexity</strong> - Requires Azure expertise</li>
+                            <li><strong>Initial Setup</strong> - More components to configure</li>
+                            <li><strong>Monitoring</strong> - Need comprehensive tracking</li>
+                            <li><strong>Vendor Lock-in</strong> - Tied to Azure ecosystem</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detailed Data Flow -->
+            <div class="section print-break">
+                <h2><span class="emoji">🔄</span> Detailed Data Flow Diagrams</h2>
+                
+                <h3>👤 User Journey: Student Learning Experience</h3>
+                <div class="diagram">
+<pre>
+    👦 Student                🌐 CDN              💻 Frontend         ⚡ API           💾 Database
+      │                        │                    │                  │                 │
+      │ 1. Opens TrainArama     │                    │                  │                 │
+      ├─────────────────────────▶                   │                  │                 │
+      │                        │ 2. Load App        │                  │                 │
+      │                        ├────────────────────▶                  │                 │
+      │                        │                    │ 3. Check Auth    │                 │
+      │                        │                    ├──────────────────▶                │
+      │                        │                    │                  │ 4. Verify User │
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │                 │
+      │ 5. Authenticated UI    │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+      │ 6. Browse Courses      │                    │                  │                 │
+      ├─────────────────────────▶ 7. Course List    ├──────────────────▶                │
+      │                        ├────────────────────▶                  │ 8. Get Courses │
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │                 │
+      │ 9. Course Data         │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+      │ 10. Start Lesson       │                    │                  │                 │
+      ├─────────────────────────▶ 11. Load Content  ├──────────────────▶                │
+      │                        ├────────────────────▶                  │ 12. Get Lesson │
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │                 │
+      │ 13. Interactive Lesson │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+      │ 14. Submit Answer      │                    │                  │                 │
+      ├─────────────────────────▶ 15. Save Progress ├──────────────────▶                │
+      │                        ├────────────────────▶                  │ 16. Update DB  │
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │                 │
+      │ 17. Instant Feedback   │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+
+🎯 Key Points:
+• All data flows through Azure CDN for speed
+• Every action is tracked for analytics
+• Real-time feedback for better learning
+• All content is cached globally
+</pre>
+                </div>
+                
+                <h3>🏢 Franchise Management: Teacher Creating Content</h3>
+                <div class="diagram">
+<pre>
+    👩‍🏫 Teacher             📁 Blob Storage        💻 Frontend         ⚡ API           💾 Database
+      │                        │                    │                  │                 │
+      │ 1. Login to Franchise  │                    │                  │                 │
+      ├─────────────────────────▶ 2. Load Dashboard │                  │                 │
+      │                        ├────────────────────▶                  │                 │
+      │                        │                    │ 3. Auth Check    │                 │
+      │                        │                    ├──────────────────▶                │
+      │                        │                    │                  │ 4. Verify Role │
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │ franchise_id =  │
+      │                        │                    │                  │ "franchise_001" │
+      │ 5. Teacher Dashboard   │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+      │ 6. Upload Logo         │                    │                  │                 │
+      ├─────────────────────────▶                   │                  │                 │
+      │                        │ 7. Store File      │                  │                 │
+      │                        │ /franchise_001/    │ 8. Save Metadata │                 │
+      │                        │ logos/new_logo.png ├──────────────────▶                │
+      │                        │                    │                  │ 9. Update Brand│
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │                 │
+      │ 10. Success Message    │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+      │                        │                    │                  │                 │
+      │ 11. Create Course      │                    │                  │                 │
+      ├─────────────────────────▶ 12. AI Content    ├──────────────────▶                │
+      │                        ├────────────────────▶                  │ 13. Save Course│
+      │                        │                    │                  ├─────────────────▶
+      │                        │                    │                  │ partition_key = │
+      │                        │                    │                  │ "franchise_001" │
+      │ 14. Course Created     │                    │ ◀────────────────┤ ◀───────────────┤
+      │ ◀──────────────────────┼────────────────────┤                  │                 │
+
+🔒 Security Features:
+• Complete data isolation per franchise
+• Role-based access control
+• Encrypted file storage
+• Audit trail for all actions
+</pre>
+                </div>
+            </div>
+            
+            <!-- Database Schema -->
+            <div class="section print-break">
+                <h2><span class="emoji">💾</span> Database Architecture</h2>
+                
+                <h3>🌐 Azure Cosmos DB Multi-Tenant Design</h3>
+                <div class="diagram">
+<pre>
+📊 Database: trainarama-platform
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           🗂️ CONTAINER: franchises                             │
+│ partition_key: "/franchise_id"                                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Document Structure:                                                             │
+│ {                                                                               │
+│   "id": "franchise_001",                                                        │
+│   "franchise_id": "franchise_001",                                              │
+│   "name": "ABC Learning Center",                                                │
+│   "location": "New York, NY",                                                   │
+│   "branding": {                                                                 │
+│     "primary_color": "#FF6B6B",                                                 │
+│     "logo_url": "/franchise_001/logos/logo.png",                                │
+│     "custom_badges": [...]                                                      │
+│   },                                                                            │
+│   "subscription": {                                                             │
+│     "tier": "premium",                                                          │
+│     "max_students": 1000,                                                       │
+│     "expires": "2025-12-31"                                                     │
+│   },                                                                            │
+│   "settings": { ... }                                                           │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                             👥 CONTAINER: users                                │
+│ partition_key: "/franchise_id"                                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Document Structure:                                                             │
+│ {                                                                               │
+│   "id": "user_12345",                                                           │
+│   "franchise_id": "franchise_001",     ← KEY: Data isolation                   │
+│   "email": "student@abclearning.com",                                           │
+│   "role": "student",                                                            │
+│   "profile": {                                                                  │
+│     "name": "Alex Smith",                                                       │
+│     "age": 12,                                                                  │
+│     "grade": "6th",                                                             │
+│     "avatar_url": "/franchise_001/users/user_12345/avatar.jpg"                  │
+│   },                                                                            │
+│   "enrollment": {                                                               │
+│     "courses": ["course_1", "course_2"],                                        │
+│     "current_level": "beginner"                                                 │
+│   },                                                                            │
+│   "created_date": "2024-12-01T00:00:00Z"                                        │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            📚 CONTAINER: courses                               │
+│ partition_key: "/franchise_id"                                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Document Structure:                                                             │
+│ {                                                                               │
+│   "id": "course_python_basics",                                                 │
+│   "franchise_id": "franchise_001",     ← KEY: Data isolation                   │
+│   "title": "Python for Kids",                                                   │
+│   "description": "Learn Python programming...",                                 │
+│   "lessons": [                                                                  │
+│     {                                                                           │
+│       "id": "lesson_1",                                                         │
+│       "title": "Variables and Numbers",                                         │
+│       "components": [                                                           │
+│         {                                                                       │
+│           "type": "python-playground",                                          │
+│           "config": { ... },                                                    │
+│           "position": { "x": 0, "y": 0 }                                        │
+│         }                                                                       │
+│       ]                                                                         │
+│     }                                                                           │
+│   ],                                                                            │
+│   "metadata": {                                                                 │
+│     "age_group": "8-12",                                                        │
+│     "difficulty": "beginner",                                                   │
+│     "estimated_duration": "4 weeks"                                             │
+│   }                                                                             │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           📈 CONTAINER: progress                               │
+│ partition_key: "/user_id"               ← Different partitioning strategy       │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Document Structure:                                                             │
+│ {                                                                               │
+│   "id": "progress_user_12345_course_python",                                    │
+│   "user_id": "user_12345",                                                      │
+│   "franchise_id": "franchise_001",                                              │
+│   "course_id": "course_python_basics",                                          │
+│   "completion_percentage": 75,                                                  │
+│   "lessons_completed": ["lesson_1", "lesson_2"],                                │
+│   "current_lesson": "lesson_3",                                                 │
+│   "badges_earned": ["first_code", "python_rookie"],                             │
+│   "time_spent_minutes": 120,                                                    │
+│   "last_activity": "2024-12-15T14:30:00Z",                                      │
+│   "analytics": {                                                                │
+│     "quiz_scores": [85, 92, 78],                                                │
+│     "code_submissions": 15,                                                     │
+│     "help_requests": 3                                                          │
+│   }                                                                             │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+🎯 Why This Design Works:
+• Franchise data is completely isolated
+• User progress is partitioned by user_id for fast queries  
+• Global system data uses separate partition
+• Scales automatically with franchise growth
+• 99.999% availability with multi-region replication
+</pre>
+                </div>
+                
+                <div class="assumption">
+                    <h4>📊 Database Scaling Assumptions</h4>
+                    <p><strong>Read/Write Ratio:</strong> 80% reads, 20% writes (typical for educational content)</p>
+                    <p><strong>Peak Usage:</strong> 10x normal load during exam periods (handled by auto-scaling)</p>
+                    <p><strong>Data Growth:</strong> ~10GB per franchise per year (courses, progress, media metadata)</p>
+                    <p><strong>User Queries:</strong> Students query their own data 95% of the time (optimized partitioning)</p>
+                </div>
+            </div>
+            
+            <!-- File Storage Architecture -->
+            <div class="section print-break">
+                <h2><span class="emoji">📁</span> File Storage Architecture</h2>
+                
+                <h3>☁️ Azure Blob Storage Multi-Tenant Structure</h3>
+                <div class="diagram">
+<pre>
+🗄️ Storage Account: trainaramastorage
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         📦 CONTAINER: franchise-assets                         │
+│ Access Level: Private (SAS tokens required)                                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 📁 franchise_001/                    ← Complete isolation per franchise        │
+│   ├── 🖼️ logos/                                                                │
+│   │   ├── primary_logo.png          (Brand logo for website)                  │
+│   │   ├── favicon.ico               (Browser icon)                            │
+│   │   └── login_background.jpg      (Custom login screen)                     │
+│   │                                                                            │
+│   ├── 🏆 badges/                                                               │
+│   │   ├── first_lesson_complete.svg  (Custom achievement icons)               │
+│   │   ├── python_master.svg                                                   │
+│   │   └── math_wizard.svg                                                     │
+│   │                                                                            │
+│   ├── 🎨 themes/                                                               │
+│   │   ├── custom_colors.json        (Franchise color scheme)                  │
+│   │   └── font_preferences.json     (Typography settings)                     │
+│   │                                                                            │
+│   └── 📋 certificates/                                                         │
+│       ├── completion_template.pdf   (Custom course certificates)              │
+│       └── achievement_template.pdf                                             │
+│                                                                                 │
+│ 📁 franchise_002/                    ← Different franchise, isolated data      │
+│   ├── 🖼️ logos/                                                                │
+│   ├── 🏆 badges/                                                               │
+│   └── ... (same structure, different content)                                  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         📚 CONTAINER: course-media                             │
+│ Access Level: Public Read (CDN cached globally)                                │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 📁 franchise_001/                                                               │
+│   └── 📖 courses/                                                               │
+│       ├── python_basics/                                                       │
+│       │   ├── 🖼️ thumbnails/                                                    │
+│       │   │   ├── lesson1_preview.jpg                                          │
+│       │   │   └── course_banner.jpg                                            │
+│       │   ├── 🎥 videos/                                                        │
+│       │   │   ├── intro_video.mp4     (CDN optimized)                          │
+│       │   │   └── lesson1_demo.mp4                                             │
+│       │   └── 📄 resources/                                                     │
+│       │       ├── python_cheatsheet.pdf                                        │
+│       │       └── exercise_solutions.zip                                       │
+│       │                                                                         │
+│       └── math_adventures/                                                      │
+│           ├── 🖼️ thumbnails/                                                    │
+│           └── 🎥 videos/                                                        │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         👤 CONTAINER: user-content                             │
+│ Access Level: Private (User-specific authentication)                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 📁 franchise_001/                                                               │
+│   └── 👥 users/                                                                 │
+│       ├── user_12345/                                                           │
+│       │   ├── 📸 profile/                                                       │
+│       │   │   ├── avatar.jpg          (Profile picture)                        │
+│       │   │   └── background.jpg      (Custom background)                      │
+│       │   ├── 💾 projects/                                                      │
+│       │   │   ├── my_first_game.py    (Student code projects)                  │
+│       │   │   └── math_calculator.py                                           │
+│       │   └── 📝 submissions/                                                   │
+│       │       ├── assignment1.zip     (Homework submissions)                   │
+│       │       └── quiz_answers.json                                            │
+│       │                                                                         │
+│       └── user_67890/                                                           │
+│           ├── 📸 profile/                                                       │
+│           └── 💾 projects/                                                      │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         🌐 CONTAINER: system-assets                            │
+│ Access Level: Public Read (Global platform resources)                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 📁 platform/                         ← Shared across all franchises            │
+│   ├── 🏆 default_badges/                                                        │
+│   │   ├── first_login.svg           (Standard achievement icons)               │
+│   │   ├── lesson_complete.svg                                                  │
+│   │   └── perfect_score.svg                                                    │
+│   │                                                                            │
+│   ├── 📚 templates/                                                             │
+│   │   ├── default_course_template.json                                         │
+│   │   ├── lesson_layouts/                                                       │
+│   │   └── component_presets/                                                   │
+│   │                                                                            │
+│   └── 🎨 ui_assets/                                                             │
+│       ├── icons/                    (Platform UI icons)                        │
+│       ├── animations/               (Loading animations)                       │
+│       └── sounds/                   (Success/failure sounds)                   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+🔄 CDN Integration:
+• All public content cached at 200+ edge locations
+• Images automatically optimized (WebP, compression)
+• Videos delivered with adaptive bitrate
+• 99.99% availability with automatic failover
+
+💰 Cost Optimization:
+• Hot Tier: Frequently accessed files (user avatars, active courses)
+• Cool Tier: Archived content (old course materials)
+• Archive Tier: Backup data (compliance/audit logs)
+• Lifecycle policies automatically move old data to cheaper tiers
+</pre>
+                </div>
+            </div>
+            
+            <!-- Security Architecture -->
+            <div class="section print-break">
+                <h2><span class="emoji">🔐</span> Security & Authentication</h2>
+                
+                <h3>🛡️ Multi-Layer Security Model</h3>
+                <div class="diagram">
+<pre>
+🔒 SECURITY LAYERS (Defense in Depth)
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           🌐 EDGE SECURITY (Layer 1)                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 🛡️ Azure CDN + WAF (Web Application Firewall)                                  │
+│   ├── DDoS Protection Standard (Automatic)                                     │
+│   ├── SQL Injection Prevention                                                 │
+│   ├── Cross-Site Scripting (XSS) Protection                                   │
+│   ├── Rate Limiting (1000 req/min per IP)                                      │
+│   └── Geo-blocking (Block suspicious countries)                                │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                      ⬇️
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                       🔐 AUTHENTICATION (Layer 2)                              │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 👤 Azure Active Directory B2C                                                  │
+│                                                                                 │
+│ 🎓 Student Flow:                    👩‍🏫 Teacher Flow:                          │
+│   ├── Age Verification              ├── Professional Email Required            │
+│   ├── Parental Consent             ├── Background Check Integration           │
+│   ├── COPPA Compliance             ├── Multi-Factor Authentication            │
+│   └── School Domain Validation     └── Admin Approval Process                 │
+│                                                                                 │
+│ 👨‍👩‍👧‍👦 Parent Flow:                   🏢 Franchise Admin:                      │
+│   ├── Identity Verification        ├── Business License Verification          │
+│   ├── Child Account Linking        ├── Advanced MFA (Hardware tokens)         │
+│   ├── Privacy Controls             ├── IP Whitelist                           │
+│   └── Activity Monitoring          └── Session Management                     │
+│                                                                                 │
+│ 🔑 JWT Tokens with Claims:                                                      │
+│   {                                                                             │
+│     "franchise_id": "franchise_001",    ← Critical for data isolation          │
+│     "user_role": "student",                                                     │
+│     "permissions": ["read_courses", "submit_assignments"],                      │
+│     "age_verified": true,                                                       │
+│     "parental_consent": true,                                                   │
+│     "subscription_tier": "premium"                                              │
+│   }                                                                             │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                      ⬇️
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        🚪 AUTHORIZATION (Layer 3)                              │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 🎭 Role-Based Access Control (RBAC)                                             │
+│                                                                                 │
+│ Student Permissions:                 Teacher Permissions:                      │
+│ ├── ✅ Read own courses             ├── ✅ Create/edit courses                 │
+│ ├── ✅ Submit assignments           ├── ✅ View student progress               │
+│ ├── ✅ View own progress            ├── ✅ Grade assignments                   │
+│ ├── ❌ Access other students        ├── ✅ Manage classroom                    │
+│ ├── ❌ Edit course content          ├── ❌ Access billing                      │
+│ └── ❌ View analytics               └── ❌ Manage other teachers               │
+│                                                                                 │
+│ Parent Permissions:                  Franchise Admin:                          │
+│ ├── ✅ View child's progress        ├── ✅ Full franchise access               │
+│ ├── ✅ Download reports             ├── ✅ User management                     │
+│ ├── ✅ Communication settings       ├── ✅ Billing & subscriptions            │
+│ ├── ❌ Direct student interaction   ├── ✅ Branding customization              │
+│ └── ❌ Course modification          └── ✅ Analytics & reporting               │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                      ⬇️
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         💾 DATA PROTECTION (Layer 4)                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 🔒 Encryption Everywhere                                                        │
+│                                                                                 │
+│ Data at Rest:                       Data in Transit:                          │
+│ ├── AES-256 encryption             ├── TLS 1.3 (minimum)                      │
+│ ├── Azure-managed keys             ├── Certificate Pinning                    │
+│ ├── Transparent Data Encryption    ├── HSTS Headers                           │
+│ └── Backup encryption              └── Perfect Forward Secrecy                │
+│                                                                                 │
+│ 🗝️ Azure Key Vault                                                             │
+│ ├── Database connection strings    ← Secrets never in code                     │
+│ ├── API keys (OpenAI, etc.)                                                    │
+│ ├── Certificate management                                                     │
+│ └── Franchise-specific encryption keys                                         │
+│                                                                                 │
+│ 🔍 Data Privacy Controls                                                        │
+│ ├── GDPR "Right to be Forgotten"                                               │
+│ ├── COPPA Student Data Protection                                              │
+│ ├── FERPA Educational Records                                                  │
+│ └── SOC 2 Type II Compliance                                                   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                      ⬇️
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        🔍 MONITORING & AUDIT (Layer 5)                        │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│ 📊 Real-time Security Monitoring                                                │
+│                                                                                 │
+│ Threat Detection:                   Audit Logging:                            │
+│ ├── Unusual login patterns         ├── All API calls logged                   │
+│ ├── Multiple failed attempts       ├── Data access tracking                   │
+│ ├── Suspicious file uploads        ├── Admin action auditing                  │
+│ ├── Privilege escalation           ├── Compliance reporting                   │
+│ └── Data exfiltration attempts     └── 7-year retention policy                │
+│                                                                                 │
+│ 🚨 Incident Response:                                                           │
+│ ├── Automatic account lockout                                                  │
+│ ├── Real-time admin alerts                                                     │
+│ ├── Forensic data collection                                                   │
+│ └── Breach notification workflows                                              │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+🎯 Security Benefits for Franchises:
+• Each franchise is completely isolated
+• Parents have full visibility and control
+• Students are protected with COPPA compliance
+• Teachers have professional-grade security
+• All data encrypted and auditable
+• 99.9% security uptime SLA
+</pre>
+                </div>
+            </div>
+            
+            <!-- Cost Analysis -->
+            <div class="section print-break">
+                <h2><span class="emoji">💰</span> Cost Analysis & Scaling</h2>
+                
+                <h3>📊 Detailed Cost Breakdown by Growth Stage</h3>
+                
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th>Growth Stage</th>
+                            <th>Franchises</th>
+                            <th>Active Users</th>
+                            <th>Storage</th>
+                            <th>Database</th>
+                            <th>Compute</th>
+                            <th>CDN</th>
+                            <th>Total/Month</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🌱 Startup</strong></td>
+                            <td>1-5</td>
+                            <td>500-2K</td>
+                            <td>$25</td>
+                            <td>$75</td>
+                            <td>$30</td>
+                            <td>$15</td>
+                            <td><strong>$145</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>🚀 Growth</strong></td>
+                            <td>6-25</td>
+                            <td>3K-15K</td>
+                            <td>$75</td>
+                            <td>$200</td>
+                            <td>$100</td>
+                            <td>$50</td>
+                            <td><strong>$425</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>📈 Scale</strong></td>
+                            <td>26-100</td>
+                            <td>15K-60K</td>
+                            <td>$200</td>
+                            <td>$600</td>
+                            <td>$300</td>
+                            <td>$150</td>
+                            <td><strong>$1,250</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>🏢 Enterprise</strong></td>
+                            <td>100-500</td>
+                            <td>60K-300K</td>
+                            <td>$600</td>
+                            <td>$2,000</td>
+                            <td>$800</td>
+                            <td>$400</td>
+                            <td><strong>$3,800</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>🌍 Global</strong></td>
+                            <td>500+</td>
+                            <td>300K+</td>
+                            <td>$1,500</td>
+                            <td>$5,000</td>
+                            <td>$2,000</td>
+                            <td>$1,000</td>
+                            <td><strong>$9,500</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="assumption">
+                    <h4>💡 Cost Calculation Assumptions</h4>
+                    <ul>
+                        <li><strong>Storage:</strong> 5GB per franchise + 100MB per active user</li>
+                        <li><strong>Database:</strong> 400 RU/s base + 50 RU/s per 1K users</li>
+                        <li><strong>Compute:</strong> Function executions based on 50 API calls/user/month</li>
+                        <li><strong>CDN:</strong> 1GB transfer per user per month</li>
+                        <li><strong>Peak scaling:</strong> 3x normal usage during exam periods</li>
+                    </ul>
+                </div>
+                
+                <h3>💸 Revenue Model & ROI</h3>
+                <div class="component">
+                    <h4>🎯 Franchise Pricing Strategy</h4>
+                    <ul>
+                        <li><strong>Starter Plan:</strong> $299/month (up to 500 students)</li>
+                        <li><strong>Growth Plan:</strong> $599/month (up to 1,500 students)</li>
+                        <li><strong>Premium Plan:</strong> $999/month (up to 3,000 students)</li>
+                        <li><strong>Enterprise Plan:</strong> Custom pricing (unlimited)</li>
+                    </ul>
+                    
+                    <p><strong>Break-even Analysis:</strong></p>
+                    <ul>
+                        <li>At 10 franchises (Growth plan): Revenue $5,990/month vs Cost $425/month = <span class="highlight">93% profit margin</span></li>
+                        <li>At 50 franchises: Revenue $29,950/month vs Cost $1,250/month = <span class="highlight">96% profit margin</span></li>
+                        <li>At 100 franchises: Revenue $59,900/month vs Cost $3,800/month = <span class="highlight">94% profit margin</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Implementation Plan -->
+            <div class="section print-break">
+                <h2><span class="emoji">🚧</span> Implementation Roadmap</h2>
+                
+                <h3>📅 12-Week Implementation Plan</h3>
+                
+                <div class="component">
+                    <h4>🎯 Phase 1: Foundation (Weeks 1-3)</h4>
+                    <div class="flow-step">Week 1: Azure Infrastructure Setup</div>
+                    <div class="flow-step">Week 2: Database & Authentication</div>
+                    <div class="flow-step">Week 3: File Storage & CDN</div>
+                    
+                    <p><strong>Deliverables:</strong></p>
+                    <ul>
+                        <li>✅ Azure Storage Account with multi-tenant structure</li>
+                        <li>✅ Cosmos DB with franchise partitioning</li>
+                        <li>✅ Azure AD B2C with custom user flows</li>
+                        <li>✅ Basic file upload functionality</li>
+                        <li>✅ Staging and production environments</li>
+                    </ul>
+                </div>
+                
+                <div class="component">
+                    <h4>🔨 Phase 2: Core Features (Weeks 4-6)</h4>
+                    <div class="flow-step">Week 4: Multi-tenant UI</div>
+                    <div class="flow-step">Week 5: Course Management</div>
+                    <div class="flow-step">Week 6: User Roles & Permissions</div>
+                    
+                    <p><strong>Deliverables:</strong></p>
+                    <ul>
+                        <li>✅ Franchise-specific branding system</li>
+                        <li>✅ Course creation and management</li>
+                        <li>✅ Student enrollment and progress tracking</li>
+                        <li>✅ Teacher dashboard and tools</li>
+                        <li>✅ Parent portal and controls</li>
+                    </ul>
+                </div>
+                
+                <div class="component">
+                    <h4>🎨 Phase 3: Enhanced Features (Weeks 7-9)</h4>
+                    <div class="flow-step">Week 7: Gamification System</div>
+                    <div class="flow-step">Week 8: Analytics & Reporting</div>
+                    <div class="flow-step">Week 9: AI Content Tools</div>
+                    
+                    <p><strong>Deliverables:</strong></p>
+                    <ul>
+                        <li>✅ Custom badge and achievement system</li>
+                        <li>✅ Real-time progress analytics</li>
+                        <li>✅ AI-powered content generation</li>
+                        <li>✅ Automated reporting for parents/teachers</li>
+                        <li>✅ Mobile-responsive design</li>
+                    </ul>
+                </div>
+                
+                <div class="component">
+                    <h4>🚀 Phase 4: Production Ready (Weeks 10-12)</h4>
+                    <div class="flow-step">Week 10: Performance Optimization</div>
+                    <div class="flow-step">Week 11: Security Hardening</div>
+                    <div class="flow-step">Week 12: Launch Preparation</div>
+                    
+                    <p><strong>Deliverables:</strong></p>
+                    <ul>
+                        <li>✅ Load testing and performance tuning</li>
+                        <li>✅ Security audit and penetration testing</li>
+                        <li>✅ Compliance certification (COPPA, GDPR)</li>
+                        <li>✅ Franchise onboarding system</li>
+                        <li>✅ Documentation and training materials</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Risk Assessment -->
+            <div class="section">
+                <h2><span class="emoji">⚠️</span> Risk Assessment & Mitigation</h2>
+                
+                <div class="component">
+                    <h4>🔥 High Priority Risks</h4>
+                    <ul>
+                        <li><strong>Data Breach:</strong> Multi-layer security, encryption, regular audits</li>
+                        <li><strong>Service Outage:</strong> Multi-region deployment, 99.99% SLA</li>
+                        <li><strong>Franchise Data Mixing:</strong> Strict partitioning, automated testing</li>
+                        <li><strong>Compliance Violations:</strong> Built-in COPPA/GDPR controls</li>
+                    </ul>
+                </div>
+                
+                <div class="component">
+                    <h4>⚡ Medium Priority Risks</h4>
+                    <ul>
+                        <li><strong>Cost Overruns:</strong> Auto-scaling limits, cost alerts</li>
+                        <li><strong>Performance Issues:</strong> CDN, caching, optimization</li>
+                        <li><strong>Integration Failures:</strong> Comprehensive testing, rollback plans</li>
+                        <li><strong>User Adoption:</strong> Training programs, support systems</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Conclusion -->
+            <div class="section">
+                <h2><span class="emoji">🎯</span> Architecture Decision Summary</h2>
+                
+                <div class="decision-point">
+                    <h3>✅ Why This Architecture is Perfect for TrainArama</h3>
+                    <ol>
+                        <li><strong>Franchise-Ready:</strong> Built for multi-tenant operations from day one</li>
+                        <li><strong>Globally Scalable:</strong> Handle millions of users across thousands of franchises</li>
+                        <li><strong>Cost-Effective:</strong> Pay-as-you-grow model with 94%+ profit margins</li>
+                        <li><strong>Enterprise Security:</strong> Compliance-ready with comprehensive protection</li>
+                        <li><strong>Future-Proof:</strong> Azure's cutting-edge technology stack</li>
+                        <li><strong>Developer-Friendly:</strong> Modern tools and clear separation of concerns</li>
+                    </ol>
+                    
+                    <h3>🚀 Next Steps</h3>
+                    <p>Ready to start building this enterprise-grade platform? Let's begin with <strong>Phase 1: Azure Storage Account setup</strong> and create the foundation for your global franchise empire!</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 40px;">
+                <h2>🌟 Ready to Build the Future of Education?</h2>
+                <p style="font-size: 1.2rem; margin: 20px 0;">This architecture will power millions of students across thousands of franchises worldwide!</p>
+                <div style="font-size: 0.9rem; opacity: 0.8;">
+                    Document Version 1.0 | Created December 2024<br>
+                    Contact: Architecture Team | TrainArama AI Education Platform
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
