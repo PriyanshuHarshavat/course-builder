@@ -6,7 +6,18 @@
       "Bash(npm start)",
       "Bash(grep:*)",
       "Bash(npm install:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(kill:*)",
+      "Bash(curl:*)",
+      "Bash(rg:*)",
+      "Bash(PORT=3001 npm start)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(mv:*)",
+      "Bash(sed:*)",
+      "Bash(fuser:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

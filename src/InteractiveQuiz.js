@@ -202,7 +202,7 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentQuestion] = useState(0);
   const [timeStarted, setTimeStarted] = useState(null);
   const [error, setError] = useState(null);
 
@@ -220,16 +220,56 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
       <div style={{ padding: '20px', background: '#ffebee', borderRadius: '8px', color: '#c62828' }}>
         <h4>Quiz Error</h4>
         <p>Invalid quiz data. Please check the quiz configuration.</p>
+        <p>Debug: element = {JSON.stringify(element)}</p>
       </div>
     );
   }
 
   const content = element.content;
-  if (!content.question || !content.options || !Array.isArray(content.options)) {
+  
+  // Validate based on quiz type
+  const quizType = content.quizType || 'multiple-choice';
+  let validationError = null;
+
+  if (!content.question) {
+    validationError = 'Missing question';
+  } else if (quizType === 'true-false') {
+    // True/false only needs question and correct answer
+    if (content.correct === undefined || content.correct === null) {
+      validationError = 'Missing correct answer for true/false question';
+    }
+  } else if (quizType === 'fill-blanks') {
+    // Fill blanks needs question and blanks array
+    if (!content.blanks || !Array.isArray(content.blanks)) {
+      validationError = 'Missing or invalid blanks for fill-in-the-blanks question';
+    }
+  } else if (quizType === 'text-input') {
+    // Text input needs question and correctAnswers
+    if (!content.correctAnswers || !Array.isArray(content.correctAnswers)) {
+      validationError = 'Missing correct answers for text input question';
+    }
+  } else {
+    // Multiple choice and multiple select need options array
+    if (!content.options || !Array.isArray(content.options)) {
+      validationError = 'Missing or invalid options array';
+    }
+  }
+
+  if (validationError) {
     return (
       <div style={{ padding: '20px', background: '#ffebee', borderRadius: '8px', color: '#c62828' }}>
         <h4>Quiz Configuration Error</h4>
-        <p>Missing question or options. Please check the quiz template.</p>
+        <p>{validationError}</p>
+        <p>Debug Info:</p>
+        <ul style={{ textAlign: 'left', fontSize: '12px' }}>
+          <li>Quiz Type: {quizType}</li>
+          <li>Has question: {!!content.question ? 'Yes' : 'No'}</li>
+          <li>Has options: {!!content.options ? 'Yes' : 'No'}</li>
+          <li>Has correct: {content.correct !== undefined ? 'Yes' : 'No'}</li>
+          <li>Has correctAnswers: {!!content.correctAnswers ? 'Yes' : 'No'}</li>
+          <li>Has blanks: {!!content.blanks ? 'Yes' : 'No'}</li>
+          <li>Content keys: {Object.keys(content).join(', ')}</li>
+        </ul>
       </div>
     );
   }
@@ -247,45 +287,75 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
     if (showResults) return;
 
     try {
+      console.log('=== QUIZ SUBMISSION ===');
+      console.log('Selected Answer:', selectedAnswers[0]);
+
       const timeCompleted = new Date();
-      const timeSpent = Math.round((timeCompleted - timeStarted) / 1000); // seconds
+      const timeSpent = Math.round((timeCompleted - timeStarted) / 1000);
+
+      // Validate required data based on quiz type
+      if (!content.question) throw new Error('Quiz question is missing');
+      
+      if (quizType === 'true-false') {
+        if (content.correct === undefined || content.correct === null) throw new Error('Correct answer not defined');
+      } else if (quizType === 'text-input') {
+        if (!content.correctAnswers || !Array.isArray(content.correctAnswers)) throw new Error('Correct answers not defined');
+      } else if (quizType === 'fill-blanks') {
+        if (!content.blanks || !Array.isArray(content.blanks)) throw new Error('Blanks not defined');
+      } else {
+        if (!content.options || !Array.isArray(content.options)) throw new Error('Quiz options are missing');
+        if (content.correct === undefined || content.correct === null) throw new Error('Correct answer not defined');
+      }
+      
+      if (selectedAnswers[0] === undefined) throw new Error('No answer selected');
 
       // Prepare quiz data for assessment
       const quizData = {
         id: content.template || 'custom-quiz',
         type: content.quizType || 'multiple-choice',
-        questions: [
-          {
-            text: content.question,
-            options: content.options,
-            correctAnswer: content.correct,
-            explanation: content.explanation,
-            correctFeedback: "Excellent! You understood this concept perfectly! 🎉",
-            incorrectFeedback: "Good try! Let's review this concept together. 🤔"
-          }
-        ],
+        questions: [{
+          text: content.question,
+          options: content.options,
+          correctAnswer: content.correct,
+          correctAnswers: content.correctAnswers,
+          blanks: content.blanks,
+          correct: content.correct, // For true/false questions
+          statement: content.question, // Alternative field name for true/false
+          explanation: content.explanation,
+          correctFeedback: "Excellent! You understood this concept perfectly! 🎉",
+          incorrectFeedback: "Good try! Let's review this concept together. 🤔"
+        }],
         passingScore: 70,
         ageGroup: content.ageGroup || '10-11',
         difficulty: content.difficulty || 'beginner'
       };
 
-      // Convert selectedAnswers to array format expected by assessment engine
       const studentAnswers = [selectedAnswers[0]];
+
+      // Validate assessment engine
+      if (!assessmentEngine || typeof assessmentEngine.assessQuiz !== 'function') {
+        throw new Error('Assessment engine is not available');
+      }
 
       // Assess the quiz
       const assessmentResults = assessmentEngine.assessQuiz(studentId, quizData, studentAnswers);
-      assessmentResults.timeSpent = timeSpent;
 
+      if (!assessmentResults) {
+        throw new Error('Assessment engine returned null results');
+      }
+
+      assessmentResults.timeSpent = timeSpent;
       setResults(assessmentResults);
       setShowResults(true);
 
-      // Notify parent component if callback provided
       if (onComplete) {
         onComplete(assessmentResults);
       }
+
+      console.log('Quiz submitted successfully!');
     } catch (err) {
-      console.error('Quiz assessment error:', err);
-      setError('Failed to assess quiz. Please try again.');
+      console.error('Quiz assessment error:', err.message);
+      setError(`Failed to assess quiz: ${err.message}`);
     }
   };
 
@@ -296,7 +366,19 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
     setTimeStarted(new Date());
   };
 
-  const isAnswerSelected = selectedAnswers[currentQuestion] !== undefined;
+  const isAnswerSelected = () => {
+    const answer = selectedAnswers[currentQuestion];
+    if (quizType === 'text-input') {
+      return answer && answer.trim().length > 0;
+    } else if (quizType === 'fill-blanks') {
+      return answer && Array.isArray(answer) && answer.some(a => a && a.trim().length > 0);
+    } else if (quizType === 'multiple-select') {
+      return answer && Array.isArray(answer) && answer.length > 0;
+    } else {
+      return answer !== undefined;
+    }
+  };
+  
   const selectedAnswer = selectedAnswers[currentQuestion];
 
   // Show error if exists
@@ -335,42 +417,142 @@ const InteractiveQuiz = ({ element, studentId = 'demo-student', onComplete }) =>
         </h4>
 
         <OptionsContainer>
-          {content.options.map((option, index) => {
-            const isSelected = selectedAnswer === index;
-            const isCorrect = index === content.correct;
-            
-            return (
-              <OptionButton
-                key={index}
-                isSelected={isSelected}
-                isCorrect={isCorrect}
-                showResults={showResults}
-                disabled={showResults}
-                onClick={() => handleAnswerSelect(0, index)}
-              >
-                <OptionIcon
+          {quizType === 'true-false' ? (
+            // True/False options
+            ['True', 'False'].map((option, index) => {
+              const answerValue = index === 0 ? true : false;
+              const isSelected = selectedAnswer === answerValue;
+              const isCorrect = answerValue === content.correct;
+              
+              return (
+                <OptionButton
+                  key={index}
                   isSelected={isSelected}
                   isCorrect={isCorrect}
                   showResults={showResults}
+                  disabled={showResults}
+                  onClick={() => handleAnswerSelect(0, answerValue)}
                 >
-                  {showResults ? (
-                    isCorrect ? <CheckCircle size={12} /> : 
-                    isSelected && !isCorrect ? <XCircle size={12} /> : 
-                    String.fromCharCode(65 + index)
-                  ) : (
-                    isSelected ? '✓' : String.fromCharCode(65 + index)
+                  <OptionIcon
+                    isSelected={isSelected}
+                    isCorrect={isCorrect}
+                    showResults={showResults}
+                  >
+                    {showResults ? (
+                      isCorrect ? <CheckCircle size={12} /> : 
+                      isSelected && !isCorrect ? <XCircle size={12} /> : 
+                      (index === 0 ? 'T' : 'F')
+                    ) : (
+                      isSelected ? '✓' : (index === 0 ? 'T' : 'F')
+                    )}
+                  </OptionIcon>
+                  {option}
+                </OptionButton>
+              );
+            })
+          ) : quizType === 'text-input' ? (
+            // Text input field
+            <input
+              type="text"
+              placeholder="Type your answer here..."
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'rgba(255,255,255,0.2)',
+                color: '#2D3436'
+              }}
+              value={selectedAnswers[0] || ''}
+              onChange={(e) => handleAnswerSelect(0, e.target.value)}
+              disabled={showResults}
+            />
+          ) : quizType === 'fill-blanks' ? (
+            // Fill in the blanks (simplified for now)
+            <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+              {content.question.split('_____').map((part, index) => (
+                <span key={index}>
+                  {part}
+                  {index < content.blanks.length && (
+                    <input
+                      type="text"
+                      placeholder="..."
+                      style={{
+                        width: '80px',
+                        padding: '4px 8px',
+                        margin: '0 4px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderRadius: '4px',
+                        background: 'rgba(255,255,255,0.2)',
+                        color: '#2D3436',
+                        fontSize: '12px'
+                      }}
+                      value={(selectedAnswers[0] && selectedAnswers[0][index]) || ''}
+                      onChange={(e) => {
+                        const newAnswers = selectedAnswers[0] || [];
+                        newAnswers[index] = e.target.value;
+                        handleAnswerSelect(0, [...newAnswers]);
+                      }}
+                      disabled={showResults}
+                    />
                   )}
-                </OptionIcon>
-                {option}
-              </OptionButton>
-            );
-          })}
+                </span>
+              ))}
+            </div>
+          ) : (
+            // Multiple choice and multiple select options
+            content.options.map((option, index) => {
+              const isSelected = quizType === 'multiple-select' 
+                ? (selectedAnswers[0] && selectedAnswers[0].includes(index))
+                : selectedAnswer === index;
+              const isCorrect = quizType === 'multiple-select'
+                ? (content.correct && content.correct.includes(index))
+                : index === content.correct;
+              
+              return (
+                <OptionButton
+                  key={index}
+                  isSelected={isSelected}
+                  isCorrect={isCorrect}
+                  showResults={showResults}
+                  disabled={showResults}
+                  onClick={() => {
+                    if (quizType === 'multiple-select') {
+                      const currentSelected = selectedAnswers[0] || [];
+                      const newSelected = currentSelected.includes(index)
+                        ? currentSelected.filter(i => i !== index)
+                        : [...currentSelected, index];
+                      handleAnswerSelect(0, newSelected);
+                    } else {
+                      handleAnswerSelect(0, index);
+                    }
+                  }}
+                >
+                  <OptionIcon
+                    isSelected={isSelected}
+                    isCorrect={isCorrect}
+                    showResults={showResults}
+                  >
+                    {showResults ? (
+                      isCorrect ? <CheckCircle size={12} /> : 
+                      isSelected && !isCorrect ? <XCircle size={12} /> : 
+                      String.fromCharCode(65 + index)
+                    ) : (
+                      isSelected ? '✓' : String.fromCharCode(65 + index)
+                    )}
+                  </OptionIcon>
+                  {option}
+                </OptionButton>
+              );
+            })
+          )}
         </OptionsContainer>
 
         {!showResults && (
           <SubmitButton
             onClick={handleSubmit}
-            disabled={!isAnswerSelected}
+            disabled={!isAnswerSelected()}
           >
             Submit Answer
             <ArrowRight size={16} />

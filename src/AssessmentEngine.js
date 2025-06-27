@@ -33,58 +33,73 @@ class AssessmentEngine {
 
   // Quiz Assessment System
   assessQuiz(studentId, quizData, studentAnswers) {
-    const student = this.initializeStudent(studentId);
-    const results = {
-      quizId: quizData.id,
-      score: 0,
-      totalQuestions: 0,
-      correctAnswers: [],
-      incorrectAnswers: [],
-      feedback: [],
-      badgesEarned: [],
-      timeCompleted: new Date(),
-      passed: false
-    };
+    try {
+      console.log('=== QUIZ ASSESSMENT STARTED ===');
+      console.log('Quiz Type:', quizData.type);
+      console.log('Student Answers:', studentAnswers);
 
-    // Handle different quiz types
-    switch(quizData.type) {
-      case 'multiple-choice':
-        Object.assign(results, this.assessMultipleChoice(quizData, studentAnswers));
-        break;
-      case 'true-false':
-        Object.assign(results, this.assessTrueFalse(quizData, studentAnswers));
-        break;
-      case 'multiple-select':
-        Object.assign(results, this.assessMultipleSelect(quizData, studentAnswers));
-        break;
-      case 'text-input':
-        Object.assign(results, this.assessTextInput(quizData, studentAnswers));
-        break;
-      case 'fill-blanks':
-        Object.assign(results, this.assessFillBlanks(quizData, studentAnswers));
-        break;
-      default:
-        Object.assign(results, this.assessMultipleChoice(quizData, studentAnswers));
-        break;
+      const student = this.initializeStudent(studentId);
+
+      const results = {
+        quizId: quizData.id,
+        score: 0,
+        totalQuestions: 0,
+        correctAnswers: [],
+        incorrectAnswers: [],
+        feedback: [],
+        badgesEarned: [],
+        timeCompleted: new Date(),
+        passed: false
+      };
+
+      // Handle different quiz types
+      switch(quizData.type) {
+        case 'multiple-choice':
+          Object.assign(results, this.assessMultipleChoice(quizData, studentAnswers));
+          break;
+        case 'true-false':
+          Object.assign(results, this.assessTrueFalse(quizData, studentAnswers));
+          break;
+        case 'multiple-select':
+          Object.assign(results, this.assessMultipleSelect(quizData, studentAnswers));
+          break;
+        case 'text-input':
+          Object.assign(results, this.assessTextInput(quizData, studentAnswers));
+          break;
+        case 'fill-blanks':
+          Object.assign(results, this.assessFillBlanks(quizData, studentAnswers));
+          break;
+        default:
+          Object.assign(results, this.assessMultipleChoice(quizData, studentAnswers));
+          break;
+      }
+
+      // Calculate final score and passing status
+      results.score = Math.round((results.correctAnswers.length / results.totalQuestions) * 100);
+      results.passed = results.score >= (quizData.passingScore || 70);
+
+      // Generate age-appropriate feedback
+      results.feedback = this.generateQuizFeedback(results, student.ageGroup);
+
+      // Check for badge achievements
+      results.badgesEarned = this.badgeSystem.checkQuizBadges(student, results);
+
+      // Update student progress
+      this.updateStudentProgress(studentId, 'quiz', results);
+
+      // Check if prerequisites are met for next activities
+      results.unlockedActivities = this.progressGates.checkUnlocks(student);
+
+      console.log('=== QUIZ ASSESSMENT COMPLETE ===');
+      console.log('Score:', results.score + '%', 'Passed:', results.passed);
+      return results;
+      
+    } catch (error) {
+      console.error('=== ASSESSMENT ENGINE ERROR ===');
+      console.error('Error in assessQuiz:', error);
+      console.error('Error stack:', error.stack);
+      throw error;
     }
-
-    // Calculate final score and passing status
-    results.score = Math.round((results.correctAnswers.length / results.totalQuestions) * 100);
-    results.passed = results.score >= (quizData.passingScore || 70);
-
-    // Generate age-appropriate feedback
-    results.feedback = this.generateQuizFeedback(results, student.ageGroup);
-
-    // Check for badge achievements
-    results.badgesEarned = this.badgeSystem.checkQuizBadges(student, results);
-
-    // Update student progress
-    this.updateStudentProgress(studentId, 'quiz', results);
-
-    // Check if prerequisites are met for next activities
-    results.unlockedActivities = this.progressGates.checkUnlocks(student);
-
-    return results;
   }
 
   // Multiple Choice Assessment
@@ -154,6 +169,122 @@ class AssessmentEngine {
     return results;
   }
 
+  // Multiple Select Assessment
+  assessMultipleSelect(quizData, studentAnswers) {
+    const results = {
+      totalQuestions: quizData.questions.length,
+      correctAnswers: [],
+      incorrectAnswers: []
+    };
+
+    quizData.questions.forEach((question, index) => {
+      const studentAnswer = studentAnswers[index] || [];
+      const correctAnswers = question.correctAnswers || [];
+      
+      // Check if arrays match
+      const isCorrect = JSON.stringify(studentAnswer.sort()) === JSON.stringify(correctAnswers.sort());
+
+      if (isCorrect) {
+        results.correctAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer,
+          feedback: "Perfect! You selected all the correct options! 🎯"
+        });
+      } else {
+        results.incorrectAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer,
+          correctAnswers,
+          feedback: "Close! Check which options are really correct. 🤔"
+        });
+      }
+    });
+
+    return results;
+  }
+
+  // Text Input Assessment
+  assessTextInput(quizData, studentAnswers) {
+    const results = {
+      totalQuestions: quizData.questions.length,
+      correctAnswers: [],
+      incorrectAnswers: []
+    };
+
+    quizData.questions.forEach((question, index) => {
+      const studentAnswer = (studentAnswers[index] || '').toLowerCase().trim();
+      const acceptableAnswers = question.acceptableAnswers || [question.correctAnswer];
+      
+      const isCorrect = acceptableAnswers.some(answer => 
+        answer.toLowerCase().trim() === studentAnswer
+      );
+
+      if (isCorrect) {
+        results.correctAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer: studentAnswers[index],
+          feedback: "Excellent answer! 💯"
+        });
+      } else {
+        results.incorrectAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer: studentAnswers[index],
+          correctAnswer: question.correctAnswer,
+          feedback: "Good try! The answer we were looking for is: " + question.correctAnswer
+        });
+      }
+    });
+
+    return results;
+  }
+
+  // Fill in the Blanks Assessment
+  assessFillBlanks(quizData, studentAnswers) {
+    const results = {
+      totalQuestions: quizData.questions.length,
+      correctAnswers: [],
+      incorrectAnswers: []
+    };
+
+    quizData.questions.forEach((question, index) => {
+      const studentAnswer = studentAnswers[index] || [];
+      const correctAnswers = question.correctAnswers || [];
+      
+      let correctCount = 0;
+      correctAnswers.forEach((correct, blankIndex) => {
+        if (studentAnswer[blankIndex] && 
+            studentAnswer[blankIndex].toLowerCase().trim() === correct.toLowerCase().trim()) {
+          correctCount++;
+        }
+      });
+
+      const isCorrect = correctCount === correctAnswers.length;
+
+      if (isCorrect) {
+        results.correctAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer,
+          feedback: "Perfect! All blanks filled correctly! 🌟"
+        });
+      } else {
+        results.incorrectAnswers.push({
+          questionIndex: index,
+          question: question.text,
+          studentAnswer,
+          correctAnswers,
+          feedback: `Good effort! You got ${correctCount} out of ${correctAnswers.length} blanks correct.`
+        });
+      }
+    });
+
+    return results;
+  }
+
   // Python Code Assessment
   assessPythonCode(studentId, codeData, studentCode, executionResult) {
     const student = this.initializeStudent(studentId);
@@ -214,6 +345,119 @@ class AssessmentEngine {
     return results;
   }
 
+  // Generate code error feedback for students
+  generateCodeErrorFeedback(error, ageGroup) {
+    const ageMessages = {
+      '8-9': [
+        "Oops! Something went wrong. Let's fix it together! 🔧",
+        "Don't worry, every coder makes mistakes! Let's try again! 😊",
+        "That's okay! Debugging is part of learning! 🐛"
+      ],
+      '10-11': [
+        "Error detected! Let's figure out what happened! 🕵️",
+        "Good try! Errors help us learn what to fix! 💡",
+        "Almost there! Let's debug this step by step! 🔍"
+      ],
+      '12-14': [
+        "Error found! Let's analyze and fix this! 🔬",
+        "Debugging time! Every error teaches us something! 📚",
+        "Error detected! Let's trace through the logic! 🧠"
+      ]
+    };
+
+    const messages = ageMessages[ageGroup] || ageMessages['10-11'];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
+  // Generate success feedback for code
+  generateSuccessFeedback(ageGroup, difficulty) {
+    const ageMessages = {
+      '8-9': [
+        "Awesome! Your code works perfectly! 🎉",
+        "Great job! You're becoming a coding star! ⭐",
+        "Fantastic! You solved it! 🌟"
+      ],
+      '10-11': [
+        "Excellent! Your code runs beautifully! 🚀",
+        "Perfect! You've mastered this concept! 🏆",
+        "Outstanding! Your logic is spot-on! 🎯"
+      ],
+      '12-14': [
+        "Exceptional work! Your code is well-structured! 💪",
+        "Brilliant! You've demonstrated great programming skills! 🧠",
+        "Impressive! Your solution is elegant and correct! ✨"
+      ]
+    };
+
+    const messages = ageMessages[ageGroup] || ageMessages['10-11'];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
+  // Generate improvement feedback
+  generateImprovementFeedback(outputMatch, ageGroup) {
+    const ageMessages = {
+      '8-9': [
+        "Good try! Your code almost works! Let's make it perfect! 🌈",
+        "Nice effort! You're getting closer! Keep going! 💪",
+        "Great start! Let's fix this together! 🤝"
+      ],
+      '10-11': [
+        "Good progress! Your code is close to the target! 🎯",
+        "Nice work! Let's refine your solution! 🔧",
+        "Well done! Small adjustments will make it perfect! ⚡"
+      ],
+      '12-14': [
+        "Good approach! Let's optimize your solution! 🔍",
+        "Solid attempt! Consider the expected output format! 📊",
+        "Nice logic! Let's align the output with requirements! 📋"
+      ]
+    };
+
+    const messages = ageMessages[ageGroup] || ageMessages['10-11'];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
+  // Analyze code quality (basic metrics)
+  analyzeCodeQuality(code, codeData) {
+    try {
+      const lines = code.split('\n').filter(line => line.trim());
+      const quality = {
+        lineCount: lines.length,
+        hasComments: code.includes('#'),
+        hasPrintStatements: code.includes('print'),
+        complexity: lines.length > 10 ? 'high' : lines.length > 5 ? 'medium' : 'low',
+        readability: code.includes('    ') ? 'good' : 'needs-improvement' // Basic indentation check
+      };
+      return quality;
+    } catch (error) {
+      console.error('Error analyzing code quality:', error);
+      return { error: 'Could not analyze code quality' };
+    }
+  }
+
+  // Compare numeric outputs
+  compareNumericOutput(studentOutput, expectedOutput) {
+    try {
+      const studentNum = parseFloat(studentOutput);
+      const expectedNum = parseFloat(expectedOutput);
+      
+      if (isNaN(studentNum) || isNaN(expectedNum)) {
+        return { isMatch: false, similarity: 0, differences: ['Not numeric values'] };
+      }
+      
+      const difference = Math.abs(studentNum - expectedNum);
+      const tolerance = Math.abs(expectedNum) * 0.01; // 1% tolerance
+      
+      return {
+        isMatch: difference <= tolerance,
+        similarity: difference <= tolerance ? 100 : Math.max(0, 100 - (difference / Math.abs(expectedNum)) * 100),
+        differences: difference > tolerance ? [`Expected: ${expectedNum}, Got: ${studentNum}`] : []
+      };
+    } catch (error) {
+      return { isMatch: false, similarity: 0, differences: ['Error comparing numeric values'] };
+    }
+  }
+
   // Compare code outputs with flexibility
   compareOutputs(studentOutput, expectedOutput, outputType = 'exact') {
     const result = {
@@ -243,7 +487,12 @@ class AssessmentEngine {
         break;
         
       case 'numeric':
-        result = this.compareNumericOutput(cleanStudent, cleanExpected);
+        Object.assign(result, this.compareNumericOutput(cleanStudent, cleanExpected));
+        break;
+        
+      default:
+        result.isMatch = cleanStudent === cleanExpected;
+        result.similarity = result.isMatch ? 100 : 0;
         break;
     }
 
@@ -321,6 +570,42 @@ class AssessmentEngine {
 
     // Update learning areas
     this.updateLearningAreas(student, results);
+  }
+
+  // Update learning areas based on performance
+  updateLearningAreas(student, results) {
+    try {
+      // Analyze performance to identify strong and weak areas
+      if (results.passed) {
+        // Add to strong areas if not already there
+        const topic = results.quizId || results.codeId || 'general';
+        if (!student.strongAreas.includes(topic)) {
+          student.strongAreas.push(topic);
+        }
+        
+        // Remove from weak areas if previously there
+        student.weakAreas = student.weakAreas.filter(area => area !== topic);
+      } else {
+        // Add to weak areas if not already there
+        const topic = results.quizId || results.codeId || 'general';
+        if (!student.weakAreas.includes(topic)) {
+          student.weakAreas.push(topic);
+        }
+        
+        // Keep only recent weak areas (last 5)
+        if (student.weakAreas.length > 5) {
+          student.weakAreas = student.weakAreas.slice(-5);
+        }
+      }
+      
+      console.log('Learning areas updated:', {
+        strong: student.strongAreas,
+        weak: student.weakAreas
+      });
+    } catch (error) {
+      console.error('Error updating learning areas:', error);
+      // Don't throw error - this is not critical for assessment
+    }
   }
 
   // Clean output for comparison
