@@ -21,6 +21,7 @@ import PromptingLessons from './PromptingLessons';
 import CourseBuilder from './CourseBuilder';
 import CourseLibrary from './CourseLibrary';
 import BrandManager from './BrandManager';
+import AzureBrandManager from './AzureBrandManager';
 import { CustomThemeProvider } from './theme/ThemeProvider';
 import ThemeAwareLogo from './components/ThemeAwareLogo';
 import {
@@ -1068,6 +1069,9 @@ const IntegratedDemoInner = ({ onReturnHome }) => {
       case 'brand-manager':
         return <BrandManager />;
       
+      case 'azure-brand-manager':
+        return <AzureBrandManager />;
+      
       case 'analytics':
         return <AnalyticsDashboard userRole={userRole} franchiseId="demo-franchise" />;
       
@@ -1171,6 +1175,7 @@ const IntegratedDemoInner = ({ onReturnHome }) => {
           title: 'Settings',
           items: [
             { id: 'brand-manager', label: 'Brand Settings', icon: Palette },
+            { id: 'azure-brand-manager', label: 'Azure Storage', icon: Upload },
             { id: 'safety', label: 'Safety & Moderation', icon: Shield }
           ]
         },
