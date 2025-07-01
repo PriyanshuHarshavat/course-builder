@@ -1,0 +1,105 @@
+name: Gemini Code Review Gatekeeper
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  gemini-code-review:
+    runs-on: ubuntu-latest
+    name: Automated Code Review
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Setup GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+          
+      - name: Install dependencies
+        run: npm ci
+          
+      - name: Run Gemini Code Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "🔍 Starting Gemini Code Review Analysis..."
+          if [ -f "scripts/gemini-review/gemini-local.js" ]; then
+            node scripts/gemini-review/gemini-local.js
+          else
+            echo "⚠️ Gemini review script not found, skipping review"
+          fi
+          
+      - name: Process Review Results
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "📋 Processing Gemini review results..."
+          if [ -f "scripts/gemini-review/github-integration.js" ]; then
+            node scripts/gemini-review/github-integration.js
+          else
+            echo "⚠️ GitHub integration script not found"
+          fi
+          
+      - name: Upload Review Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-review-results
+          path: |
+            scripts/gemini-review/gemini-feedback.json
+            scripts/gemini-review/gemini-review-prompt.txt
+          retention-days: 30
+          
+      - name: Set PR Status
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f "scripts/gemini-review/gemini-feedback.json" ]; then
+            ASSESSMENT=$(jq -r '.review.assessment // "NEEDS_REVIEW"' scripts/gemini-review/gemini-feedback.json)
+            case $ASSESSMENT in
+              "APPROVE")
+                echo "✅ Code review passed - ready for merge"
+                exit 0
+                ;;
+              "NEEDS_WORK")
+                echo "⚠️ Code review requires improvements"
+                exit 1
+                ;;
+              "REJECT")
+                echo "❌ Code review failed - critical issues found"
+                exit 1
+                ;;
+              *)
+                echo "🔍 Code review pending"
+                exit 1
+                ;;
+            esac
+          else
+            echo "⚠️ Review results not found"
+            exit 1
+          fi
