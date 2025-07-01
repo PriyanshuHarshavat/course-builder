@@ -1,0 +1,107 @@
+name: Code Guardian Gatekeeper
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main # or master, depending on your default branch name
+
+jobs:
+  code_review:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Required to get full history for changed files
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Code Guardian dependencies
+      run: npm install
+      working-directory: ./code-guardian
+
+    - name: Get changed files in PR
+      id: changed-files
+      uses: tj-actions/changed-files@v44 # Use a GitHub Action to get changed files
+      with:
+        files_ignore: |
+          package-lock.json
+          *.md
+          .github/**
+
+    - name: Run Code Guardian Review
+      id: run-review
+      # Only run if there are changed files to review
+      if: steps.changed-files.outputs.any_changed == 'true'
+      run: |
+        # Construct the command with all changed files
+        # The output from tj-actions/changed-files is space-separated
+        CHANGED_FILES_ARRAY=(${{ steps.changed-files.outputs.all_changed_files }})
+        
+        # Filter for relevant file types (e.g., .js, .jsx, .ts, .tsx)
+        # And prepend with the full path relative to the runner's workspace
+        REVIEW_FILES=()
+        for file in "${CHANGED_FILES_ARRAY[@]}"; do
+          if [[ "$file" == *.js || "$file" == *.jsx || "$file" == *.ts || "$file" == *.tsx ]]; then
+            REVIEW_FILES+=("$PWD/$file")
+          fi
+        done
+
+        if [ ${#REVIEW_FILES[@]} -eq 0 ]; then
+          echo "No relevant code files changed for review. Skipping." >&2
+          echo "assessment=APPROVE" >> $GITHUB_OUTPUT # Set to APPROVE if no code files changed
+          exit 0
+        fi
+
+        # Execute the Code Guardian script with the list of changed files
+        node ./code-guardian/index.js "${REVIEW_FILES[@]}"
+
+        # Read the feedback JSON and set outputs for subsequent steps
+        REVIEW_OUTPUT=$(cat ./code-guardian/gemini-feedback.json)
+        echo "review_json=$REVIEW_OUTPUT" >> $GITHUB_OUTPUT
+        
+        ASSESSMENT=$(echo $REVIEW_OUTPUT | jq -r '.review.assessment')
+        echo "assessment=$ASSESSMENT" >> $GITHUB_OUTPUT
+
+    - name: Post Review Comment on PR
+      if: github.event_name == 'pull_request' && steps.run-review.outputs.assessment != ''
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const review = JSON.parse(process.env.REVIEW_JSON);
+          let commentBody = `## Code Guardian Review Result: ${review.review.assessment}\n\n`;
+          commentBody += `**Timestamp**: ${review.timestamp}\n\n`;
+          commentBody += `### Critical Issues\n${review.review.critical_issues.length > 0 ? review.review.critical_issues.map(issue => `- ${issue}`).join('\n') : 'None'}\n\n`;
+          commentBody += `### Security Concerns\n${review.review.security_concerns.length > 0 ? review.review.security_concerns.map(concern => `- ${concern}`).join('\n') : 'None'}\n\n`;
+          commentBody += `### Documentation Gaps\n${review.review.documentation_gaps.length > 0 ? review.review.documentation_gaps.map(gap => `- ${gap}`).join('\n') : 'None'}\n\n`;
+          commentBody += `### Suggestions\n${review.review.suggestions.length > 0 ? review.review.suggestions.map(suggestion => `- ${suggestion}`).join('\n') : 'None'}\n\n`;
+          commentBody += `### Action Items\n${review.review.action_items.length > 0 ? review.review.action_items.map(item => `- ${item}`).join('\n') : 'None'}\n\n`;
+          commentBody += `**Franchise Readiness**: ${review.review.franchise_readiness}\n\n`;
+          commentBody += `**Code Quality Score**: ${review.review.code_quality_score}\n\n`;
+          commentBody += `**Review Confidence**: ${review.review.review_confidence}\n\n`;
+          commentBody += `*Files Reviewed*: ${review.files_reviewed}\n\n`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: commentBody
+          });
+      env:
+        REVIEW_JSON: ${{ steps.run-review.outputs.review_json }}
+
+    - name: Set PR Status (Fail on REJECT/NEEDS_WORK)
+      if: steps.run-review.outputs.assessment == 'REJECT' || steps.run-review.outputs.assessment == 'NEEDS_WORK'
+      run: |
+        echo "Code review failed with assessment: ${{ steps.run-review.outputs.assessment }}"
+        exit 1 # Fail the GitHub Action job
+
+    - name: Set PR Status (Pass on APPROVE)
+      if: steps.run-review.outputs.assessment == 'APPROVE'
+      run: echo "Code review passed with assessment: APPROVE"

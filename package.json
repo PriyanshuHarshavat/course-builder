@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "webpack serve --mode development",
+    "demo": "webpack serve --mode development"
+  }
+}
