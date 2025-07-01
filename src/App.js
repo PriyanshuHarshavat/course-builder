@@ -61,6 +61,21 @@ const WelcomeScreen = styled.div`
   color: white;
 `;
 
+const StagingBanner = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+`;
+
 const WelcomeTitle = styled.h1`
   font-size: 48px;
   margin-bottom: 20px;
@@ -68,6 +83,7 @@ const WelcomeTitle = styled.h1`
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-top: 40px; /* Account for staging banner */
 `;
 
 const WelcomeSubtitle = styled.p`
@@ -225,6 +241,9 @@ function App() {
   return (
     <ThemeProvider theme={TrainAramaTheme}>
       <AppContainer>
+        <StagingBanner>
+          🧪 STAGING ENVIRONMENT - Test Site Only
+        </StagingBanner>
         <WelcomeScreen>
           <WelcomeTitle>
             <BookOpen size={64} />

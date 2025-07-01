@@ -28,7 +28,14 @@
       "WebFetch(domain:calm-water-09ad8bf10.1.azurestaticapps.net)",
       "WebFetch(domain:github.com)",
       "Bash(find:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh run list:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:yellow-bay-0b1dc0510.2.azurestaticapps.net)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
